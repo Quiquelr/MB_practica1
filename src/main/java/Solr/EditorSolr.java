@@ -28,10 +28,18 @@ public class EditorSolr {
 		}
                                              
         	cliente.commit(coleccion);
-        } 
+        	cliente.close();  
+    } 
     
-    public void vaciarColeccion(String coleccion) {
-    	
+    public void vaciarColeccion(String coleccion) throws SolrServerException, IOException {
+
+        final SolrClient cliente = new HttpSolrClient.Builder("http://localhost:8983/solr").build();
+        
+        cliente.deleteByQuery(coleccion, "*:*");
+        
+        cliente.commit(coleccion);
+
+        cliente.close();     
     }
 
 }

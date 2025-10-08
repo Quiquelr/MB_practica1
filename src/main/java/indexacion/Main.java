@@ -15,6 +15,7 @@ public class Main {
 		EditorSolr escritor = new EditorSolr();
 		
 		escritor.escribirArchivos(lector.extraerArchivos("Corpus/MED.ALL"), "Corpus_MEDLARS");
+		//escritor.vaciarColeccion("Corpus_MEDLARS");
 	}
 
 }
