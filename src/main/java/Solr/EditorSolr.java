@@ -22,7 +22,7 @@ public class EditorSolr {
         	SolrInputDocument documento = new SolrInputDocument(); 
         	
         	documento.addField("id", archivo.getId());
-        	documento.addField("cuepo", archivo.getCuerpo());
+        	documento.addField("texto", archivo.getCuerpo());
         	
         	cliente.add(coleccion, documento);
 		}

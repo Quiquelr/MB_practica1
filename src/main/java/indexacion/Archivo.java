@@ -5,6 +5,7 @@ public class Archivo {
 	private int id;
 	private String titulo;
 	private String cuerpo;
+	
 	public int getId() {
 		return id;
 	}
