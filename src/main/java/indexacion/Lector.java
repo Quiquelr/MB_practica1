@@ -55,8 +55,7 @@ public class Lector {
 		}
 				
 		scan.close();
-		return archivos;
-		
+		return archivos;		
 	}
 
 }
