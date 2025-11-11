@@ -80,9 +80,16 @@ public class EditorSolr {
 					String queryString = String.join(" OR ", palabrasLimpias);
 
 					SolrQuery solrQuery = new SolrQuery();
-					solrQuery.setQuery("texto: (" + queryString + ")");
+					//solrQuery.setQuery("texto: (" + queryString + ")");
+					//solrQuery.setFields("id, score");
+					//solrQuery.setRows(10);
+					
+					solrQuery.setQuery(textoQuery);
+					solrQuery.set("df", "texto"); //campo por defecto para buscar
+					solrQuery.set("defType", "edismax"); // query parser
 					solrQuery.setFields("id, score");
-					solrQuery.setRows(10);
+					solrQuery.setRows(500);
+					
 
 					QueryResponse respuesta = cliente.query(coleccion, solrQuery);
 					SolrDocumentList idDocumentos = respuesta.getResults();
@@ -90,23 +97,19 @@ public class EditorSolr {
 
 					// Rellenar archivo de salida
 					if (idDocumentos.size() != 0) {
-						
-						int ranking = 0;	
-						int q=-1;
-						
-						for (int i = 0; i < idDocumentos.size(); i++) {													
-							
-							if(query.getId() != q) {
-								
-								q = query.getId();
-								ranking = 0;								
-							}else {
-								ranking++;								
-							}							
-														
-							/**salida.println(query.getId() + " " + idDocumentos.get(i).getFieldValue("id"));**/
-							salida.println(query.getId() + " Q0 " + idDocumentos.get(i).getFieldValue("id") + " " + ranking +" "+ idDocumentos.get(i).getFieldValue("score") + " QLR");
-						}
+												
+									
+						int ranking = 0; // El ranking empieza en 0
+		                
+		                for (SolrDocument doc : idDocumentos) {
+		                    
+		                    salida.println(query.getId() + " Q0 " + 
+		                                   doc.getFieldValue("id") + " " + 
+		                                   ranking + " " + 
+		                                   doc.getFieldValue("score") + " QLR");
+		                    
+		                    ranking++;
+		                }
 
 						System.out.println("	Se han encontrado " + idDocumentos.size() + " para la query " + query.getId());
 					} else {
