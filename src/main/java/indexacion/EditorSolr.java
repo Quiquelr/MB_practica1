@@ -1,4 +1,4 @@
-package Solr;
+package indexacion;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,8 +14,6 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
-
-import indexacion.Archivo;
 
 public class EditorSolr {
 
@@ -79,19 +77,35 @@ public class EditorSolr {
 					
 					System.out.println("ID de Query a ejecutar: " + query.getId() + ": " + palabrasLimpias.toString());
 					
-					String queryString = String.join(" AND ", palabrasLimpias);
+					String queryString = String.join(" OR ", palabrasLimpias);
 
 					SolrQuery solrQuery = new SolrQuery();
 					solrQuery.setQuery("texto: (" + queryString + ")");
-					solrQuery.setRows(1000);
+					solrQuery.setFields("id, score");
+					solrQuery.setRows(10);
 
 					QueryResponse respuesta = cliente.query(coleccion, solrQuery);
 					SolrDocumentList idDocumentos = respuesta.getResults();
+									
 
 					// Rellenar archivo de salida
 					if (idDocumentos.size() != 0) {
-						for (int i = 0; i < idDocumentos.size(); i++) {
-							salida.println(query.getId() + " " + idDocumentos.get(i).getFieldValue("id"));
+						
+						int ranking = 0;	
+						int q=-1;
+						
+						for (int i = 0; i < idDocumentos.size(); i++) {													
+							
+							if(query.getId() != q) {
+								
+								q = query.getId();
+								ranking = 0;								
+							}else {
+								ranking++;								
+							}							
+														
+							/**salida.println(query.getId() + " " + idDocumentos.get(i).getFieldValue("id"));**/
+							salida.println(query.getId() + " Q0 " + idDocumentos.get(i).getFieldValue("id") + " " + ranking +" "+ idDocumentos.get(i).getFieldValue("score") + " QLR");
 						}
 
 						System.out.println("	Se han encontrado " + idDocumentos.size() + " para la query " + query.getId());

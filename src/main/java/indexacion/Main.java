@@ -9,8 +9,6 @@ import java.util.Set;
 
 import org.apache.solr.client.solrj.SolrServerException;
 
-import Solr.EditorSolr;
-
 public class Main {
 
 	public static void main(String[] args) throws FileNotFoundException, SolrServerException, IOException {
