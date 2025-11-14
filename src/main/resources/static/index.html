@@ -12,7 +12,7 @@
             color: #333;
             margin: 0;
             padding: 20px;
-            min-height: 100vh;
+            min-height: 100vh; /* Asegura que el fondo cubra la pantalla */
         }
 
         .container {
@@ -21,7 +21,7 @@
         }
 
         h1 {
-            color: #2c3e50;
+            color: #2c3e50; /* Azul oscuro */
             text-align: center;
             margin-bottom: 30px;
         }
@@ -29,8 +29,8 @@
         /* --- Estilos de la Barra de Búsqueda --- */
         .search-box {
             display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
+            gap: 10px; /* Espacio entre input y botón */
+            margin-bottom: 20px; /* Reducido un poco */
         }
 
         #query {
@@ -45,7 +45,7 @@
 
         #query:focus {
             outline: none;
-            border-color: #007bff; 
+            border-color: #007bff; /* Azul primario */
             box-shadow: 0 0 0 3px rgba(0,123,255,0.2); 
         }
 
@@ -63,17 +63,25 @@
         }
 
         button:hover {
-            background-color: #0056b3;
+            background-color: #0056b3; /* Azul más oscuro */
         }
         
         button:active {
-            transform: translateY(1px);
+            transform: translateY(1px); /* Efecto de click */
+        }
+        
+        /* --- Estilo para el resumen de resultados --- */
+        #search-summary {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 20px;
+            min-height: 1.2em; /* Evita que la página "salte" */
         }
 
         /* --- Estilos de Carga (Spinner) --- */
         .loading-spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #007bff; /* Color primario */
+            border: 4px solid rgba(0, 0, 0, 0.1); /* Gris claro */
+            border-left-color: #007bff; /* Azul primario */
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -93,7 +101,7 @@
         }
 
         .result-card {
-            background-color: #ffffff;
+            background-color: #ffffff; /* Blanco */
             border: 1px solid #e0e0e0;
             border-radius: 10px;
             padding: 20px;
@@ -136,6 +144,7 @@
             font-size: 16px;
             line-height: 1.6;
             color: #555;
+            text-align: justify; /* Texto justificado */
         }
         
         /* Mensaje de "No hay resultados" */
@@ -154,47 +163,67 @@
     <div class="container">
         <h1>Buscador Solr</h1>
         <div class="search-box">
-            <input type="text" id="query" placeholder="Ingrese su consulta...">
+            <!-- Búsqueda al pulsar "Enter" -->
+            <input type="text" id="query" placeholder="Ingrese su consulta..." onkeydown="if(event.key==='Enter') search()">
             <button onclick="search()">Buscar</button>
         </div>
+        
+        <!-- Contenedor para el resumen/conteo de resultados -->
+        <div id="search-summary"></div>
         
         <!-- Contenedor para los resultados -->
         <div id="resultados-container"></div>
     </div>
 
     <script>
+        // JS para activar la búsqueda con "Enter"
+        document.getElementById('query').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Evita que el Enter haga un submit (si estuviera en un form)
+                search();
+            }
+        });
+
         async function search() {
             const query = document.getElementById('query').value;
             const container = document.getElementById('resultados-container');
+            const summaryContainer = document.getElementById('search-summary');
 
-            //Limpiar resultados y mostrar spinner de carga
+            // 1. Limpiar resultados, mostrar spinner y limpiar resumen
             container.innerHTML = '<div class="loading-spinner"></div>';
+            summaryContainer.innerHTML = ''; // Limpiar el conteo anterior
 
             try {
+                // [MEMO] Llama al SolrQueryController
                 const response = await fetch(`/api/query?q=${encodeURIComponent(query)}`);
                 if (!response.ok) {
                     throw new Error(`Error HTTP: ${response.status}`);
                 }
                 const data = await response.json();
 
-                // Limpiar el spinner
+                // 2. Limpiar el spinner
                 container.innerHTML = ''; 
 
-                // Comprobar si hay resultados
+                // 3. Comprobar si hay resultados
                 if (data.length === 0) {
                     container.innerHTML = '<p class="no-results">No se encontraron resultados.</p>';
-                    return;
+                    return; // No mostramos conteo si no hay resultados
                 }
-             
+                
+                // 4. Añadir el conteo de resultados
+                const countText = data.length === 1 ? "resultado" : "resultados";
+                summaryContainer.innerHTML = `Se encontraron <strong>${data.length}</strong> ${countText}.`;
+
+
+                // 5. Crear una tarjeta para cada resultado
                 data.forEach(item => {
-                                        
+                    // [MEMO] Lógica basada en el DocumentoDTO
                     const title = (item.titulo && item.titulo.trim() !== '') ? item.titulo : 'Sin Título';
-                                      
                     const description = (item.cuerpo && item.cuerpo.trim() !== '') ? item.cuerpo : 'No hay descripción disponible.';
-                                    
+
                     const card = document.createElement('div');
                     card.className = 'result-card';
-                                        
+                    
                     card.innerHTML = `
                         <div class="result-header">
                             <span class="result-id">ID: ${item.id}</span>
@@ -209,6 +238,7 @@
             } catch (error) {
                 console.error('Error al realizar la búsqueda:', error);
                 container.innerHTML = '<p class="no-results" style="color: red;">Error al cargar los resultados.</p>';
+                summaryContainer.innerHTML = ''; // Limpiar también en caso de error
             }
         }
     </script>

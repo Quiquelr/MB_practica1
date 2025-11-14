@@ -35,15 +35,27 @@ public class SolrService {
      */
     public List<DocumentoDTO> buscar(String queryString) throws SolrServerException, IOException {
     	
-    	SolrQuery query = new SolrQuery();
-        query.setQuery(queryString);
+		String queryFinal = queryString;
+		boolean todo = false; // si es una búsqueda "ver todo"
+		
+    	SolrQuery query = new SolrQuery();        
         query.set("df", "texto"); //campo por defecto para buscar
 		query.set("defType", "edismax");
+		query.setFields("id, titulo, texto, score");
+		query.setRows(1300);
+
+		if (queryString == null || queryString.trim().isEmpty() || queryString.trim().equals("*:*")) {
+			queryFinal = "*:*";
+			todo = true;
+		}	
 		
-		if(queryString == "*") {
-			query.setRows(1033);
-		}else {
-			query.setRows(500);
+		query.setQuery(queryFinal);    		
+		
+		//ordenar según busca total o normal
+		if (todo) {			
+			query.setSort("id", SolrQuery.ORDER.asc); //busca total ordenado por id
+		} else {		
+			query.setSort("score", SolrQuery.ORDER.desc); //busca normal ordena por relevancia
 		}
         
         QueryResponse respuesta = solrClient.query(query);
