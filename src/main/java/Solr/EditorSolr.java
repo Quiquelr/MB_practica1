@@ -1,4 +1,4 @@
-package indexacion;
+package Solr;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,10 +10,11 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
+
+import indexacion.Archivo;
 
 public class EditorSolr {
 
@@ -26,6 +27,7 @@ public class EditorSolr {
 			SolrInputDocument documento = new SolrInputDocument();
 
 			documento.addField("id", archivo.getId());
+			documento.addField("titulo", archivo.getTitulo());
 			documento.addField("texto", archivo.getCuerpo());
 
 			cliente.add(coleccion, documento);
