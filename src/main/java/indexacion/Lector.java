@@ -41,7 +41,7 @@ public class Lector {
                 String id[] = linea.split(" ");
                 if (id.length > 1) { // si tiene id
                     // Usamos String para el ID para que coincida con Solr/DTO
-                    archivoActual.setId(id[1]);
+                    archivoActual.setId(Long.parseLong(id[1].trim()));
                 }
 
             } else if (linea.startsWith(".W")) {
@@ -93,7 +93,7 @@ public class Lector {
 				//Coger ID
 				String id[] = linea.split(" ");
 				if(id.length > 1) { //si tiene id
-					archivoActual.setId(id[1]);
+					archivoActual.setId(Long.parseLong(id[1].trim()));
 				}
 						
 			} else if (linea.startsWith(".W")) {

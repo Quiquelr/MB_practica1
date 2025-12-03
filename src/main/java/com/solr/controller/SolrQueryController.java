@@ -39,24 +39,23 @@ public class SolrQueryController {
     	
     	String solrQuery = query;
     	
-    	if(solrQuery.isEmpty() || solrQuery.equals("*") ) {
-    		solrQuery = "*:*";    		
+    	if(solrQuery.trim().isEmpty() || solrQuery.trim().equals("*")) {
+    		solrQuery = "*:*";      	
     	}
     	
-        // 1. Ejecutar la búsqueda en Solr para obtener TODOS los resultados
-        // 'resultados' contiene *TODOS* los documentos de Solr.
+        //búsqueda en Solr
         List<DocumentoDTO> resultados = searchService.buscar(solrQuery);
 
-        String resumen = "Resumen RAG no solicitado. Agregue '&summarize=true' a la URL para generarlo.";
+        String resumen = "Resumen RAG no solicitado.";
 
         if (resumir) {
             
             //contexto RAG: primeros 5 resultados
             List<DocumentoDTO> contextoRAG = resultados.stream()
-                .limit(5) // <-- SOLO SE USAN LOS 5 PRIMEROS
+                .limit(5)
                 .collect(Collectors.toList());
             
-            // resumen Ollama
+            //resumen Ollama
             resumen = ollamaService.generarResumen(contextoRAG, query, incluirQuery);
             
         }

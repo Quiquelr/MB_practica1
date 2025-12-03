@@ -91,7 +91,7 @@
             user-select: none;
         }
 
-        /* Estilo personalizado para checkboxes */
+        /* Estilo checkbox */
         input[type="checkbox"] {
             width: 18px;
             height: 18px;
@@ -101,13 +101,13 @@
 
         /* --- Tarjeta de Resumen RAG --- */
         .rag-card {
-            background-color: #e3f2fd; /* Azul muy claro */
+            background-color: #e3f2fd;
             border-left: 5px solid #2196f3;
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 30px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            display: none; /* Oculto por defecto */
+            display: none;
             animation: fadeIn 0.5s ease-in-out;
         }
 
@@ -123,7 +123,7 @@
         .rag-text {
             font-size: 16px;
             line-height: 1.6;
-            white-space: pre-wrap; /* Mantiene formato del LLM */
+            white-space: pre-wrap;
             color: #2c3e50;
         }
 
@@ -265,8 +265,7 @@
             loader.style.display = 'block'; // Mostrar spinner
 
             try {
-                // Construir URL con parámetros
-                // endpoint: /api/query?q=...&summarize=...&includeQueryInPrompt=...
+                // Construir URL con parámetros               
                 const params = new URLSearchParams({
                     q: query,
                     summarize: chkSummarize.checked,
@@ -280,20 +279,17 @@
                 }
 
                 // Parsear respuesta como la clase RespuestaRAG
-                const data = await response.json();
-                
-                // data.resumen -> String
-                // data.resultados -> List<DocumentoDTO>
+                const data = await response.json();                         
 
-                loader.style.display = 'none'; // Ocultar spinner
+                loader.style.display = 'none';
 
-                // 1. Mostrar Resumen RAG (si existe y no es el mensaje por defecto de "no solicitado")
+                // Resumen RAG (si existe y no es el mensaje por defecto de "no solicitado")
                 if (chkSummarize.checked && data.resumen) {
                     ragContainer.style.display = 'block';
                     ragContent.textContent = data.resumen;
                 }
 
-                // 2. Mostrar Resultados Solr
+                // Resultados Solr
                 const docs = data.resultados;
 
                 if (!docs || docs.length === 0) {

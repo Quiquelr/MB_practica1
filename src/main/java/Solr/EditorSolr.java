@@ -26,7 +26,7 @@ public class EditorSolr {
 
 			SolrInputDocument documento = new SolrInputDocument();
 
-			documento.addField("id", archivo.getId());
+			documento.addField("idDoc", archivo.getId());
 			documento.addField("titulo", archivo.getTitulo());
 			documento.addField("texto", archivo.getTitulo() + archivo.getCuerpo());
 

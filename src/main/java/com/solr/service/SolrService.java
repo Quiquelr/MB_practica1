@@ -34,29 +34,28 @@ public class SolrService {
      * @throws IOException
      */
     public List<DocumentoDTO> buscar(String queryString) throws SolrServerException, IOException {
-    	
-		String queryFinal = queryString;
+    			
 		boolean todo = false; // si es una búsqueda "ver todo"
 		
     	SolrQuery query = new SolrQuery();        
         query.set("df", "texto"); //campo por defecto para buscar
 		query.set("defType", "edismax");
-		query.setFields("id, titulo, texto, score");
+		query.setFields("idDoc, titulo, texto, score");
 		
 
 		if (queryString == null || queryString.trim().isEmpty() || queryString.trim().equals("*:*")) {		
-			todo = true;
+			todo = true;			
 		}	
 		
-		query.setQuery(queryFinal);    		
+		query.setQuery(queryString);    		
 		
 		//ordenar según busca total o normal
 		if (todo) {			
-			query.setSort("id", SolrQuery.ORDER.asc); //busca total ordenado por id
-			query.setRows(1300);
+			query.setSort("idDoc", SolrQuery.ORDER.asc); //busca total ordenado por id
+			query.setRows(1300);			
 		} else {		
 			query.setSort("score", SolrQuery.ORDER.desc); //busca normal ordena por relevancia
-			query.setRows(500);
+			query.setRows(500);			
 		}
         
         QueryResponse respuesta = solrClient.query(query);
@@ -66,7 +65,7 @@ public class SolrService {
         for (SolrDocument doc : documentos) {        	          
 
             DocumentoDTO dto = new DocumentoDTO(
-                (String) doc.getFieldValue("id"),
+                (long) doc.getFieldValue("idDoc"),
                 (String) doc.getFieldValue("titulo"),
                 (String) doc.getFieldValue("texto")
             );
@@ -86,7 +85,7 @@ public class SolrService {
     		
     		SolrInputDocument solrDoc = new SolrInputDocument();
     		
-    		solrDoc.addField("id",  doc.getId());
+    		solrDoc.addField("idDoc",  doc.getId());
     		solrDoc.addField("titulo", doc.getTitulo());
     		solrDoc.addField("texto", doc.getCuerpo());
     		

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DocumentoDTO {
 	
-	@JsonProperty("id")
-	private String id;
+	@JsonProperty("idDoc")
+	private long idDoc;
 	
 	@JsonProperty("titulo")
 	private String titulo;
@@ -15,24 +15,24 @@ public class DocumentoDTO {
 	
 	public DocumentoDTO() {}
 	
-	public DocumentoDTO(String id, String cuerpo) {
-		this.id = id;
+	public DocumentoDTO(long id, String cuerpo) {
+		this.idDoc = id;
 		this.titulo = null;
 		this.cuerpo = cuerpo;		
 	}
 	
-	public DocumentoDTO(String id, String titulo, String cuerpo) {
-		this.id = id;
+	public DocumentoDTO(long id, String titulo, String cuerpo) {
+		this.idDoc = id;
 		this.titulo = titulo;
 		this.cuerpo = cuerpo;		
 	}
 	
-    public String getId() {
-        return id;
+    public long getId() {
+        return idDoc;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setId(long id) {
+        this.idDoc = id;
     }
     
     public String getTitulo() {
