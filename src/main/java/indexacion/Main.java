@@ -2,6 +2,7 @@ package indexacion;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.solr.client.solrj.SolrServerException;
 
@@ -14,13 +15,13 @@ public class Main {
 		Lector lector = new Lector();
 		EditorSolr editor = new EditorSolr();
 		
-		editor.escribirArchivos(lector.extraerArchivos("Corpus/MED.ALL"), "Corpus");
+		//editor.escribirArchivos(lector.extraerArchivos("Corpus/MED.ALL"), "Corpus4");
 		
-		//editor.vaciarColeccion("Corpus");
+		//editor.vaciarColeccion("Corpus2");
 		
 		//HACER CONSULTAS
-		//List<Archivo> queries = lector.extraerArchivos("Corpus/MED.QRY");
-		//editor.buscarYGuardarResultados(queries, "Corpus", "resultados.txt");
+		List<Archivo> queries = lector.extraerQuery("Corpus/MED.QRY");
+		editor.buscarYGuardarResultados(queries, "Corpus4", "resultados_v4.txt");
             
 	}
 

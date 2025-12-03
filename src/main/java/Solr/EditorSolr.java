@@ -28,7 +28,7 @@ public class EditorSolr {
 
 			documento.addField("id", archivo.getId());
 			documento.addField("titulo", archivo.getTitulo());
-			documento.addField("texto", archivo.getCuerpo());
+			documento.addField("texto", archivo.getTitulo() + archivo.getCuerpo());
 
 			cliente.add(coleccion, documento);
 		}
@@ -118,7 +118,7 @@ public class EditorSolr {
 						System.out.println("	No se han encontrado documentos para la query " + query.getId());
 					}
 				}else {
-					System.out.println(" !! No hay palabras para buscar");
+					System.out.println(" !! No hay palabras para buscar para la query " + query.getId());
 				}
 
 			}

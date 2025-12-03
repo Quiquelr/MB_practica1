@@ -42,10 +42,9 @@ public class SolrService {
         query.set("df", "texto"); //campo por defecto para buscar
 		query.set("defType", "edismax");
 		query.setFields("id, titulo, texto, score");
-		query.setRows(1300);
+		
 
-		if (queryString == null || queryString.trim().isEmpty() || queryString.trim().equals("*:*")) {
-			queryFinal = "*:*";
+		if (queryString == null || queryString.trim().isEmpty() || queryString.trim().equals("*:*")) {		
 			todo = true;
 		}	
 		
@@ -54,8 +53,10 @@ public class SolrService {
 		//ordenar según busca total o normal
 		if (todo) {			
 			query.setSort("id", SolrQuery.ORDER.asc); //busca total ordenado por id
+			query.setRows(1300);
 		} else {		
 			query.setSort("score", SolrQuery.ORDER.desc); //busca normal ordena por relevancia
+			query.setRows(500);
 		}
         
         QueryResponse respuesta = solrClient.query(query);
