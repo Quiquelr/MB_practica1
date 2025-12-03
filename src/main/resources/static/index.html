@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buscador Solr</title>
+    <title>Buscador Solr + RAG</title>
     <style>
         /* --- Estilos Generales --- */
         body {
@@ -12,7 +12,7 @@
             color: #333;
             margin: 0;
             padding: 20px;
-            min-height: 100vh; /* Asegura que el fondo cubra la pantalla */
+            min-height: 100vh;
         }
 
         .container {
@@ -21,36 +21,42 @@
         }
 
         h1 {
-            color: #2c3e50; /* Azul oscuro */
+            color: #2c3e50;
             text-align: center;
             margin-bottom: 30px;
         }
 
-        /* --- Estilos de la Barra de Búsqueda --- */
+        /* --- Panel de Búsqueda y Opciones --- */
+        .search-panel {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
         .search-box {
             display: flex;
-            gap: 10px; /* Espacio entre input y botón */
-            margin-bottom: 20px; /* Reducido un poco */
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
         #query {
-            flex-grow: 1; /* El input ocupa el espacio disponible */
+            flex-grow: 1;
             padding: 12px 15px;
             font-size: 16px;
             border: 1px solid #ddd;
             border-radius: 8px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
-            transition: border-color 0.3s, box-shadow 0.3s;
+            transition: border-color 0.3s;
         }
 
         #query:focus {
             outline: none;
-            border-color: #007bff; /* Azul primario */
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.2); 
+            border-color: #007bff;
         }
 
-        button {
-            padding: 12px 20px;
+        button.search-btn {
+            padding: 12px 25px;
             font-size: 16px;
             font-weight: bold;
             color: #fff;
@@ -58,187 +64,266 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: background-color 0.3s, transform 0.1s;
+            transition: background-color 0.3s;
         }
 
-        button:hover {
-            background-color: #0056b3; /* Azul más oscuro */
+        button.search-btn:hover {
+            background-color: #0056b3;
         }
-        
-        button:active {
-            transform: translateY(1px); /* Efecto de click */
+
+        /* --- Opciones RAG --- */
+        .rag-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            align-items: center;
         }
-        
-        /* --- Estilo para el resumen de resultados --- */
-        #search-summary {
-            font-size: 16px;
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
             color: #555;
-            margin-bottom: 20px;
-            min-height: 1.2em; /* Evita que la página "salte" */
+            cursor: pointer;
+            user-select: none;
         }
 
-        /* --- Estilos de Carga (Spinner) --- */
-        .loading-spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1); /* Gris claro */
-            border-left-color: #007bff; /* Azul primario */
+        /* Estilo personalizado para checkboxes */
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #007bff;
+        }
+
+        /* --- Tarjeta de Resumen RAG --- */
+        .rag-card {
+            background-color: #e3f2fd; /* Azul muy claro */
+            border-left: 5px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: none; /* Oculto por defecto */
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .rag-card h2 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #0d47a1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rag-text {
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre-wrap; /* Mantiene formato del LLM */
+            color: #2c3e50;
+        }
+
+        /* --- Resultados de Solr --- */
+        #resultados-info {
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .result-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .result-id {
+            background-color: #17a2b8;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .result-title {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .result-body {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+            text-align: justify;
+        }
+
+        /* --- Loading Spinner --- */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
             border-radius: 50%;
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin: 50px auto; /* Centrado */
+            margin: 30px auto;
         }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* --- Estilos de los Resultados --- */
-        #resultados-container {
-            display: grid;
-            gap: 20px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .result-card {
-            background-color: #ffffff; /* Blanco */
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-            transition: box-shadow 0.3s;
-            overflow-wrap: break-word; /* Evita que texto largo rompa el layout */
-        }
-
-        .result-card:hover {
-            box-shadow: 0 6px 12px rgba(0,0,0,0.12);
-        }
-
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        /* ID del resultado */
-        .result-id {
-            font-size: 14px;
-            font-weight: bold;
-            color: #fff;
-            background-color: #17a2b8; /* Cian */
-            padding: 4px 10px;
-            border-radius: 20px;
-        }
-
-        /* Título del resultado */
-        .result-title {
-            font-size: 20px;
-            color: #2c3e50;
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-
-        /* Cuerpo/Descripción del resultado */
-        .result-body {
-            font-size: 16px;
-            line-height: 1.6;
-            color: #555;
-            text-align: justify; /* Texto justificado */
-        }
-        
-        /* Mensaje de "No hay resultados" */
-        .no-results {
-            text-align: center;
-            color: #777;
-            font-style: italic;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 10px;
-        }
+        .error-msg { color: #dc3545; text-align: center; margin-top: 20px; }
+        .no-results { text-align: center; color: #777; margin-top: 30px; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Buscador Solr</h1>
-        <div class="search-box">
-            <!-- Búsqueda al pulsar "Enter" -->
-            <input type="text" id="query" placeholder="Ingrese su consulta..." onkeydown="if(event.key==='Enter') search()">
-            <button onclick="search()">Buscar</button>
+        <h1>Buscador Solr + RAG</h1>
+
+        <!-- Panel de Control -->
+        <div class="search-panel">
+            <div class="search-box">
+                <input type="text" id="query" placeholder="Escribe tu consulta aquí..." onkeydown="if(event.key==='Enter') search()">
+                <button class="search-btn" onclick="search()">Buscar</button>
+            </div>
+            
+            <div class="rag-options">
+                <label class="toggle-label" title="Activa para generar un resumen con IA de los 5 primeros resultados">
+                    <input type="checkbox" id="chk-summarize">
+                    <strong>Generar Resumen con IA</strong>
+                </label>
+
+                <label class="toggle-label" title="Incluye tu frase de búsqueda en las instrucciones para la IA">
+                    <input type="checkbox" id="chk-include-query">
+                    Incluir mi consulta en el contexto
+                </label>
+            </div>
         </div>
-        
-        <!-- Contenedor para el resumen/conteo de resultados -->
-        <div id="search-summary"></div>
-        
-        <!-- Contenedor para los resultados -->
-        <div id="resultados-container"></div>
+
+        <!-- Contenedor de Carga -->
+        <div id="loader" class="spinner" style="display: none;"></div>
+
+        <!-- Sección RAG (Resumen) -->
+        <div id="rag-container" class="rag-card">
+            <h2>Resumen Inteligente</h2>
+            <div id="rag-content" class="rag-text"></div>
+        </div>
+
+        <!-- Info de Resultados -->
+        <div id="resultados-info"></div>
+
+        <!-- Lista de Resultados -->
+        <div id="resultados-list"></div>
     </div>
 
     <script>
-        // JS para activar la búsqueda con "Enter"
-        document.getElementById('query').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Evita que el Enter haga un submit (si estuviera en un form)
-                search();
-            }
-        });
-
         async function search() {
-            const query = document.getElementById('query').value;
-            const container = document.getElementById('resultados-container');
-            const summaryContainer = document.getElementById('search-summary');
+            const queryInput = document.getElementById('query');
+            const chkSummarize = document.getElementById('chk-summarize');
+            const chkIncludeQuery = document.getElementById('chk-include-query');
+            
+            const resultsList = document.getElementById('resultados-list');
+            const resultsInfo = document.getElementById('resultados-info');
+            const ragContainer = document.getElementById('rag-container');
+            const ragContent = document.getElementById('rag-content');
+            const loader = document.getElementById('loader');
 
-            // 1. Limpiar resultados, mostrar spinner y limpiar resumen
-            container.innerHTML = '<div class="loading-spinner"></div>';
-            summaryContainer.innerHTML = ''; // Limpiar el conteo anterior
+            const query = queryInput.value.trim();
+
+            // Resetear interfaz
+            resultsList.innerHTML = '';
+            resultsInfo.innerHTML = '';
+            ragContainer.style.display = 'none';
+            ragContent.textContent = '';
+            
+            loader.style.display = 'block'; // Mostrar spinner
 
             try {
-                // [MEMO] Llama al SolrQueryController
-                const response = await fetch(`/api/query?q=${encodeURIComponent(query)}`);
+                // Construir URL con parámetros
+                // endpoint: /api/query?q=...&summarize=...&includeQueryInPrompt=...
+                const params = new URLSearchParams({
+                    q: query,
+                    summarize: chkSummarize.checked,
+                    includeQueryInPrompt: chkIncludeQuery.checked
+                });
+
+                const response = await fetch(`/api/query?${params.toString()}`);
+
                 if (!response.ok) {
                     throw new Error(`Error HTTP: ${response.status}`);
                 }
+
+                // Parsear respuesta como la clase RespuestaRAG
                 const data = await response.json();
-
-                // 2. Limpiar el spinner
-                container.innerHTML = ''; 
-
-                // 3. Comprobar si hay resultados
-                if (data.length === 0) {
-                    container.innerHTML = '<p class="no-results">No se encontraron resultados.</p>';
-                    return; // No mostramos conteo si no hay resultados
-                }
                 
-                // 4. Añadir el conteo de resultados
-                const countText = data.length === 1 ? "resultado" : "resultados";
-                summaryContainer.innerHTML = `Se encontraron <strong>${data.length}</strong> ${countText}.`;
+                // data.resumen -> String
+                // data.resultados -> List<DocumentoDTO>
 
+                loader.style.display = 'none'; // Ocultar spinner
 
-                // 5. Crear una tarjeta para cada resultado
-                data.forEach(item => {
-                    // [MEMO] Lógica basada en el DocumentoDTO
-                    const title = (item.titulo && item.titulo.trim() !== '') ? item.titulo : 'Sin Título';
-                    const description = (item.cuerpo && item.cuerpo.trim() !== '') ? item.cuerpo : 'No hay descripción disponible.';
+                // 1. Mostrar Resumen RAG (si existe y no es el mensaje por defecto de "no solicitado")
+                if (chkSummarize.checked && data.resumen) {
+                    ragContainer.style.display = 'block';
+                    ragContent.textContent = data.resumen;
+                }
 
+                // 2. Mostrar Resultados Solr
+                const docs = data.resultados;
+
+                if (!docs || docs.length === 0) {
+                    resultsList.innerHTML = '<div class="no-results">No se encontraron documentos.</div>';
+                    return;
+                }
+
+                resultsInfo.textContent = `Se encontraron ${docs.length} documentos.`;
+
+                docs.forEach(doc => {
                     const card = document.createElement('div');
                     card.className = 'result-card';
-                    
+
+                    const titulo = doc.titulo ? doc.titulo : 'Sin Título';
+                    const cuerpo = doc.cuerpo ? doc.cuerpo : '';
+
                     card.innerHTML = `
                         <div class="result-header">
-                            <span class="result-id">ID: ${item.id}</span>
+                            <span class="result-id">ID: ${doc.id}</span>
                         </div>
-                        <h3 class="result-title">${title}</h3>
-                        <p class="result-body">${description}</p>
+                        <h3 class="result-title">${titulo}</h3>
+                        <div class="result-body">${cuerpo}</div>
                     `;
-                                      
-                    container.appendChild(card);
+                    resultsList.appendChild(card);
                 });
 
             } catch (error) {
-                console.error('Error al realizar la búsqueda:', error);
-                container.innerHTML = '<p class="no-results" style="color: red;">Error al cargar los resultados.</p>';
-                summaryContainer.innerHTML = ''; // Limpiar también en caso de error
+                console.error(error);
+                loader.style.display = 'none';
+                resultsList.innerHTML = `<div class="error-msg">Ocurrió un error al buscar: ${error.message}</div>`;
             }
         }
     </script>

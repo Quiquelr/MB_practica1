@@ -3,6 +3,7 @@ package com.solr.controller;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -11,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.solr.dto.DocumentoDTO;
+import com.solr.dto.RespuestaRAG;
+import com.solr.service.OllamaService;
 import com.solr.service.SolrService;
 
 @RestController
@@ -19,46 +23,44 @@ import com.solr.service.SolrService;
 public class SolrQueryController {
 
 	private final SolrService searchService;
+	private final OllamaService ollamaService;
 
-	public SolrQueryController(SolrService searchService) {
-		this.searchService = searchService;
-	}
+	public SolrQueryController(SolrService searchService, OllamaService ollamaService) {
+        this.searchService = searchService;
+        this.ollamaService = ollamaService;
+    }
 
 	@GetMapping
-	public List<?> query(@RequestParam("q") String query) throws SolrServerException, IOException {
+    public RespuestaRAG query(
+        @RequestParam("q") String query,
+        @RequestParam(value = "summarize", defaultValue = "false") boolean resumir,
+        @RequestParam(value = "includeQueryInPrompt", defaultValue = "false") boolean incluirQuery
+    ) throws SolrServerException, IOException {
+    	
+    	String solrQuery = query;
+    	
+    	if(solrQuery.isEmpty() || solrQuery.equals("*") ) {
+    		solrQuery = "*:*";    		
+    	}
+    	
+        // 1. Ejecutar la búsqueda en Solr para obtener TODOS los resultados
+        // 'resultados' contiene *TODOS* los documentos de Solr.
+        List<DocumentoDTO> resultados = searchService.buscar(solrQuery);
 
-		if (query.equals("") || query.equals("")) {
+        String resumen = "Resumen RAG no solicitado. Agregue '&summarize=true' a la URL para generarlo.";
 
-			// Si se quiere mostrar todos los documentos
-			query = "*:*";
-
-		} else {
-
-			String[] palabras = query.split("\\s+"); // texto dividido por palabras
-
-			// Coge 5 primeras palabras
-			List<String> palabrasLimpias = new ArrayList<>();
-			for (String palabra : palabras) {
-				// Si ya tenemos 5 palabras, paramos de buscar.
-				if (palabrasLimpias.size() >= 5) {
-					break;
-				}
-
-				String palabraLimpia = palabra.replaceAll("[^a-zA-Z0-9]", "");
-
-				if (!palabraLimpia.isEmpty()) {
-					palabrasLimpias.add(palabraLimpia);
-				}
-
-			}
-			
-			for(String palabra : palabrasLimpias) {
-				query = query + " " + palabra;
-			}
-			
-		}
-
-		return searchService.buscar(query);
-	}
-
+        if (resumir) {
+            
+            //contexto RAG: primeros 5 resultados
+            List<DocumentoDTO> contextoRAG = resultados.stream()
+                .limit(5) // <-- SOLO SE USAN LOS 5 PRIMEROS
+                .collect(Collectors.toList());
+            
+            // resumen Ollama
+            resumen = ollamaService.generarResumen(contextoRAG, query, incluirQuery);
+            
+        }
+              
+        return new RespuestaRAG(resumen, resultados);
+    }
 }
